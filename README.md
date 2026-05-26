@@ -1,4 +1,4 @@
-# Trabalho de Teoria de Grafos e Computabilidade - *Seguimentação de Imagem*
+# Trabalho de Teoria de Grafos e Computabilidade - *Segmentação de Imagem*
 
 Projeto desenvolvido para a disciplina de **Teoria de Grafos e Computabilidade**, com o objetivo de estudar e implementar métodos de **segmentação de imagens baseada em grafos**.
 
