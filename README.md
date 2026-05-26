@@ -31,8 +31,47 @@ w(p, q) = |I(p) - I(q)|
 
 ## Equipe
 
-- [![GitHub](https://img.shields.io/badge/-Arthur%20Campos-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/artuh21)
-- [![GitHub](https://img.shields.io/badge/-Bruna%20Furtado-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/cestpassion) 
-- [![GitHub](https://img.shields.io/badge/-Gabriel%20Henrique-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/GabrielDev0001)
-- [![GitHub](https://img.shields.io/badge/-Felipe%20Barros-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/FelipeeBarros)
-- [![GitHub](https://img.shields.io/badge/-Miguel%20Pessoa-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/MiguelPessoaLF)
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/artuh21" title="Arthur">
+        <img src="https://avatars.githubusercontent.com/u/130799136?v=4" width="100px;" alt="Foto do Arthur"/><br>
+        <sub>
+          <img src="https://img.shields.io/badge/-Arthur%20Campos-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub Arthur Campos">
+        </sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/cestpassion" title="Bruna">
+        <img src="https://avatars.githubusercontent.com/u/164122042?v=4" width="100px;" alt="Foto da Bruna"/><br>
+        <sub>
+          <img src="https://img.shields.io/badge/-Bruna%20Furtado-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub Bruna Furtado">
+        </sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/GabrielDev0001" title="Gabriel">
+        <img src="https://avatars.githubusercontent.com/u/157509318?v=4" width="100px;" alt="Foto do Gabriel"/><br>
+        <sub>
+          <img src="https://img.shields.io/badge/-Gabriel%20Henrique-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub Gabriel Henrique">
+        </sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/FelipeeBarros" title="Felipe">
+        <img src="https://avatars.githubusercontent.com/u/181682076?v=4" width="100px;" alt="Foto do Felipe"/><br>
+        <sub>
+          <img src="https://img.shields.io/badge/-Felipe%20Barros-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub Felipe Barros">
+        </sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/MiguelPessoaLF" title="Miguel">
+        <img src="https://avatars.githubusercontent.com/u/180358485?v=4" width="100px;" alt="Foto do Miguel"/><br>
+        <sub>
+          <img src="https://img.shields.io/badge/-Miguel%20Pessoa-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub Miguel Pessoa">
+        </sub>
+      </a>
+    </td>
+  </tr>
+</table>
