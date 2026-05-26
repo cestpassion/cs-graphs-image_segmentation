@@ -1,4 +1,4 @@
-# sc-graphs-img-seg
+# Trabalho de Teoria de Grafos e Computabilidade - *Seguimentação de Imagem*
 
 Projeto desenvolvido para a disciplina de **Teoria de Grafos e Computabilidade**, com o objetivo de estudar e implementar métodos de **segmentação de imagens baseada em grafos**.
 
@@ -27,3 +27,12 @@ Para imagens em níveis de cinza, o peso entre dois pixels pode ser calculado pe
 
 ```text
 w(p, q) = |I(p) - I(q)|
+```
+
+## Equipe
+
+- [![GitHub](https://img.shields.io/badge/-Arthur%20Campos-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/artuh21)
+- [![GitHub](https://img.shields.io/badge/-Bruna%20Furtado-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/cestpassion) 
+- [![GitHub](https://img.shields.io/badge/-Gabriel%20Henrique-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/GabrielDev0001)
+- [![GitHub](https://img.shields.io/badge/-Felipe%20Barros-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/FelipeeBarros)
+- [![GitHub](https://img.shields.io/badge/-Miguel%20Pessoa-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/MiguelPessoaLF)
