@@ -65,6 +65,9 @@ w(p, q) = |I(p) - I(q)|
         </sub>
       </a>
     </td>
+</table>
+
+<table>
     <td align="center">
       <a href="https://github.com/matheusmra" title="Matheus">
         <img src="https://avatars.githubusercontent.com/u/69125506?v=4" width="100px;" alt="Foto do Matheus"/><br>
