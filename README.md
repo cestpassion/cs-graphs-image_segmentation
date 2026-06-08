@@ -50,13 +50,7 @@ Método baseado em caminho mínimo. A segmentação ocorre a partir de sementes,
 │   └── Makefile
 │
 ├── docs/
-│   ├── 2026-1-assignment-1-statement.pdf
-│   ├── README.md
-│   ├── comandos.md
-│   ├── arquitetura.md
-│   ├── decisoes_do_projeto.md
-│   ├── padrao_branches.md
-│   └── cronograma.md
+│   └── 2026-1-assignment-1-statement.pdf
 │
 ├── refs/
 │   ├── Efficient_Graph-Based_Image_Segmentation.pdf
@@ -64,10 +58,6 @@ Método baseado em caminho mínimo. A segmentação ocorre a partir de sementes,
 │   └── The_Image_Foresting_Transform.pdf
 │
 ├── report/
-│   ├── main.tex
-│   ├── references.bib
-│   ├── main.pdf
-│   └── figures/
 │
 ├── README.md
 ├── LICENSE
