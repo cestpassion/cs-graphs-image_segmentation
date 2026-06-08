@@ -231,21 +231,6 @@ Windows PowerShell/CMD:
 ./segmentador --input data/input/exemplo.jpg --output data/output/ift.png --method ift --seeds data/input/seeds.txt --neighborhood 8
 ```
 
-## Branches do projeto
-
-As funcionalidades serão desenvolvidas em branches `feature/...`.
-
-| Issue                                                                   | Branch                                     |
-| ----------------------------------------------------------------------- | ------------------------------------------ |
-| Issue 1 — Estrutura do projeto, build, leitura/escrita de imagens e CLI | `feature/project-setup-cli`                |
-| Issue 2 — Modelagem da imagem como grafo                                | `feature/image-graph-model`                |
-| Issue 3 — Felzenszwalb e Huttenlocher                                   | `feature/felzenszwalb-segmentation`        |
-| Issue 4 — Cousty et al.                                                 | `feature/cousty-hierarchical-segmentation` |
-| Issue 5 — Image Foresting Transform                                     | `feature/ift-segmentation`                 |
-| Issue 6 — Experimentos e comparação                                     | `feature/experiments-comparison`           |
-| Issue 7 — Integração final e testes                                     | `develop`                                  |
-| Issue 8 — Relatório e documentação final                                | `main`                                     |
-
 ## Documentação
 
 A documentação auxiliar está em:
