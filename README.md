@@ -246,20 +246,6 @@ As funcionalidades serão desenvolvidas em branches `feature/...`.
 | Issue 7 — Integração final e testes                                     | `develop`                                  |
 | Issue 8 — Relatório e documentação final                                | `main`                                     |
 
-## Fluxo de trabalho
-
-1. Cada integrante escolhe uma Issue.
-2. Cada funcionalidade deve ser feita em sua branch `feature/...`.
-3. Ao finalizar, o integrante abre Pull Request para `develop`.
-4. A branch `develop` concentra a integração do código.
-5. A branch `main` fica reservada para a versão final, documentação e entrega.
-
-Fluxo resumido:
-
-```txt
-feature/... → develop → main
-```
-
 ## Documentação
 
 A documentação auxiliar está em:
