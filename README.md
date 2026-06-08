@@ -12,21 +12,243 @@ Os métodos estudados são:
 
 1. Segmentação baseada em **Árvore Geradora Mínima**, conforme o método de [Felzenszwalb e Huttenlocher](refs/Efficient_Graph-Based_Image_Segmentation.pdf).
 2. Segmentação hierárquica baseada em **Árvore Geradora Mínima**, conforme o método de [Cousty et al](refs/Hierarchical_Segmentations_with_Graphs_Quasi-flat_.pdf).
-3. Segmentação baseada em **Caminho Mínimo**, utilizando a abordagem de [Image Foresting Transform, IFT](refs/Efficient_Graph-Based_Image_Segmentation.pdf).
+3. Segmentação baseada em **Caminho Mínimo**, utilizando a abordagem de [Image Foresting Transform, IFT](refs/The_Image_Foresting_Transform_Theory_Algorithms_an.pdf).
 
-## Modelagem do problema
+## Métodos previstos
 
-A imagem é transformada em um grafo ponderado não direcionado.
+### Felzenszwalb e Huttenlocher
 
-- Cada pixel da imagem corresponde a um vértice.
-- Cada aresta conecta pixels vizinhos.
-- O peso da aresta representa a diferença entre os pixels.
-- O particionamento do grafo gera as regiões segmentadas da imagem.
+Método baseado em grafos que utiliza uma estratégia relacionada à Árvore Geradora Mínima. A imagem é modelada como um grafo e os componentes são unidos de acordo com a diferença entre regiões e um limiar adaptativo.
 
-Para imagens em níveis de cinza, o peso entre dois pixels pode ser calculado pela diferença absoluta entre suas intensidades:
+### Cousty et al.
 
-```text
-w(p, q) = |I(p) - I(q)|
+Método de segmentação hierárquica baseado em grafos, envolvendo conceitos como zonas quasi-flat, árvores geradoras mínimas e mapas de saliência.
+
+### Image Foresting Transform, IFT
+
+Método baseado em caminho mínimo. A segmentação ocorre a partir de sementes, e os pixels são conquistados por árvores de caminhos ótimos.
+
+## Estrutura do repositório
+
+```txt
+.
+├── code/
+│   ├── external/
+│   │   ├── stb_image.h
+│   │   └── stb_image_write.h
+│   ├── include/
+│   │   ├── CLI.hpp
+│   │   └── Image.hpp
+│   ├── src/
+│   │   ├── CLI.cpp
+│   │   └── Image.cpp
+│   ├── tests/
+│   ├── data/
+│   │   ├── input/
+│   │   └── output/
+│   ├── main.cpp
+│   └── Makefile
+│
+├── docs/
+│   └── 2026-1-assignment-1-statement.pdf
+│
+├── refs/
+│   ├── Efficient_Graph-Based_Image_Segmentation.pdf
+│   ├── Hierarchical_Segmentations_with_Graphs.pdf
+│   └── The_Image_Foresting_Transform.pdf
+│
+├── report/
+│
+├── README.md
+├── LICENSE
+└── .gitignore
+````
+
+## Pastas principais
+
+| Pasta               | Descrição                                            |
+| ------------------- | ---------------------------------------------------- |
+| `code/`             | Código-fonte em C++                                  |
+| `code/include/`     | Arquivos de cabeçalho `.hpp`                         |
+| `code/src/`         | Arquivos de implementação `.cpp`                     |
+| `code/external/`    | Bibliotecas externas header-only                     |
+| `code/data/input/`  | Imagens de entrada                                   |
+| `code/data/output/` | Imagens geradas pelo programa                        |
+| `docs/`             | Documentação auxiliar do projeto                     |
+| `refs/`             | Artigos e referências científicas usadas no trabalho |
+| `report/`           | Relatório final em LaTeX e PDF                       |
+
+## Dependências
+
+O projeto utiliza as bibliotecas header-only:
+
+* `stb_image.h`
+* `stb_image_write.h`
+
+Essas bibliotecas são usadas para leitura e escrita de imagens.
+
+Elas devem estar na pasta:
+
+```txt
+code/external/
+```
+
+## Como compilar
+
+Entre na pasta do código:
+
+```bash
+cd code
+```
+
+Compile com:
+
+```bash
+make
+```
+
+ou 
+
+```bash
+mingw32-make
+```
+
+Isso gera o executável:
+
+```txt
+segmentador
+```
+
+No Windows, o executável pode ser gerado como:
+
+```txt
+segmentador.exe
+```
+
+## Como limpar a compilação
+
+Dentro da pasta `code/`, execute:
+
+```bash
+make clean
+```
+
+ou 
+
+```bash
+mingw32-make clean
+```
+
+Esse comando remove o executável gerado.
+
+## Como executar
+
+### Exibir ajuda
+
+Linux/macOS/Git Bash:
+
+```bash
+./segmentador --help
+```
+
+Windows PowerShell/CMD:
+
+```bash
+.\segmentador.exe --help
+```
+
+### Copiar imagem colorida
+
+Linux/macOS/Git Bash:
+
+```bash
+./segmentador --input data/input/exemplo.jpg --output data/output/copia.png --method copy --color
+```
+
+Windows PowerShell/CMD:
+
+```bash
+.\segmentador.exe --input data/input/exemplo.jpg --output data/output/copia.png --method copy --color
+```
+
+### Converter imagem para tons de cinza
+
+Linux/macOS/Git Bash:
+
+```bash
+./segmentador --input data/input/exemplo.jpg --output data/output/cinza.png --method copy --gray
+```
+
+Windows PowerShell/CMD:
+
+```bash
+.\segmentador.exe --input data/input/exemplo.jpg --output data/output/cinza.png --method copy --gray
+```
+
+## Parâmetros aceitos
+
+| Parâmetro        | Descrição                             |
+| ---------------- | ------------------------------------- |
+| `--input`        | Caminho da imagem de entrada          |
+| `--output`       | Caminho da imagem de saída            |
+| `--method`       | Método selecionado                    |
+| `--gray`         | Converte a imagem para tons de cinza  |
+| `--color`        | Mantém a imagem colorida              |
+| `--neighborhood` | Define vizinhança 4 ou 8              |
+| `--k`            | Parâmetro do método de Felzenszwalb   |
+| `--min_size`     | Tamanho mínimo de componente          |
+| `--threshold`    | Limiar usado no método hierárquico    |
+| `--seeds`        | Arquivo de sementes para o método IFT |
+| `--help`         | Exibe a ajuda do programa             |
+
+## Exemplos futuros de execução
+
+### Felzenszwalb
+
+```bash
+./segmentador --input data/input/exemplo.jpg --output data/output/felzenszwalb.png --method felzenszwalb --k 300 --min_size 20 --neighborhood 8
+```
+
+### Cousty
+
+```bash
+./segmentador --input data/input/exemplo.jpg --output data/output/cousty.png --method cousty --threshold 40 --neighborhood 8
+```
+
+### IFT
+
+```bash
+./segmentador --input data/input/exemplo.jpg --output data/output/ift.png --method ift --seeds data/input/seeds.txt --neighborhood 8
+```
+
+## Documentação
+
+A documentação auxiliar está em:
+
+```txt
+docs/
+```
+
+## Referências
+
+Os artigos científicos usados como base para o trabalho estão na pasta:
+
+```txt
+refs/
+```
+
+Referências principais:
+
+* Pedro F. Felzenszwalb e Daniel P. Huttenlocher — Efficient Graph-Based Image Segmentation.
+* Jean Cousty, Laurent Najman, Yukiko Kenmochi e Silvio Jamil Ferzoli Guimarães — Hierarchical Segmentations with Graphs.
+* Alexandre X. Falcão, Jorge Stolfi e Roberto de Alencar Lotufo — The Image Foresting Transform.
+
+## Relatório
+
+O relatório final será desenvolvido na pasta:
+
+```txt
+report/
 ```
 
 ## Equipe
