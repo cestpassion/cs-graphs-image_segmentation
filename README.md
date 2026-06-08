@@ -145,44 +145,20 @@ Esse comando remove o executável gerado.
 
 ### Exibir ajuda
 
-Linux/macOS/Git Bash:
-
 ```bash
 ./segmentador --help
 ```
 
-Windows PowerShell/CMD:
-
-```bash
-.\segmentador.exe --help
-```
-
 ### Copiar imagem colorida
-
-Linux/macOS/Git Bash:
 
 ```bash
 ./segmentador --input data/input/exemplo.jpg --output data/output/copia.png --method copy --color
 ```
 
-Windows PowerShell/CMD:
-
-```bash
-.\segmentador.exe --input data/input/exemplo.jpg --output data/output/copia.png --method copy --color
-```
-
 ### Converter imagem para tons de cinza
-
-Linux/macOS/Git Bash:
 
 ```bash
 ./segmentador --input data/input/exemplo.jpg --output data/output/cinza.png --method copy --gray
-```
-
-Windows PowerShell/CMD:
-
-```bash
-.\segmentador.exe --input data/input/exemplo.jpg --output data/output/cinza.png --method copy --gray
 ```
 
 ## Parâmetros aceitos
