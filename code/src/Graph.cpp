@@ -1,4 +1,5 @@
 #include "Graph.hpp"
+#include <cmath>
 
 // Convencao: origem (0,0) no canto superior esquerdo; x cresce para a
 // direita, y para baixo. O id percorre a imagem linha a linha.
@@ -13,4 +14,21 @@ int coordToId(int x, int y, int width)
 std::pair<int, int> idToCoord(int id, int width)
 {
     return {id % width, id / width};
+}
+
+// Peso para tons de cinza: o quanto as duas intensidades diferem.
+// Pixels iguais dao peso 0; quanto mais diferentes, maior o peso.
+double grayWeight(int i1, int i2)
+{
+    return std::abs(i1 - i2);
+}
+
+// Peso para cor (RGB): a "distancia" entre as duas cores.
+// Olha a diferenca em cada canal (R, G, B) e junta tudo como uma distancia em linha reta. Mesma cor da 0; cores bem diferentes dao mais.
+double colorWeight(int r1, int g1, int b1, int r2, int g2, int b2)
+{
+    int dr = r1 - r2;
+    int dg = g1 - g2;
+    int db = b1 - b2;
+    return std::sqrt(static_cast<double>(dr * dr + dg * dg + db * db));
 }
