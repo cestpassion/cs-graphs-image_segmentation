@@ -7,14 +7,17 @@
 #include <utility>
 #include <vector>
 
+// Testes implementados para conferir se tá tudo ok (TÁ OK, confia no pai)
+
 static int edgeCount(int w, int h, Connectivity c)
 {
-    auto weight = [](int u, int v) { return static_cast<double>(u + v); };
+    auto weight = [](int u, int v)
+    { return static_cast<double>(u + v); };
     Graph g = buildGraph(w, h, c, weight);
     assert(g.numVertices == w * h);
     assert(g.width == w && g.height == h);
     std::set<std::pair<int, int>> seen;
-    for (const Edge& e : g.edges)
+    for (const Edge &e : g.edges)
     {
         assert(e.src != e.dest);
         int a = e.src < e.dest ? e.src : e.dest;
@@ -26,7 +29,8 @@ static int edgeCount(int w, int h, Connectivity c)
 
 static void testVertices()
 {
-    auto weight = [](int, int) { return 0.0; };
+    auto weight = [](int, int)
+    { return 0.0; };
     Graph g = buildGraph(4, 5, Connectivity::FOUR, weight);
     assert(g.numVertices == 20);
     assert(g.width == 4 && g.height == 5);
@@ -78,18 +82,20 @@ static void testWeights()
 static void testWeightFromImage()
 {
     std::vector<int> gray = {10, 12, 20, 40};
-    auto weight = [&](int u, int v) { return grayWeight(gray[u], gray[v]); };
+    auto weight = [&](int u, int v)
+    { return grayWeight(gray[u], gray[v]); };
     Graph g = buildGraph(2, 2, Connectivity::FOUR, weight);
-    for (const Edge& e : g.edges)
+    for (const Edge &e : g.edges)
         assert(e.weight == grayWeight(gray[e.src], gray[e.dest]));
 }
 
 static void testNoDuplicates()
 {
-    auto weight = [](int u, int v) { return static_cast<double>(u + v); };
+    auto weight = [](int u, int v)
+    { return static_cast<double>(u + v); };
     Graph g = buildGraph(5, 4, Connectivity::EIGHT, weight);
     std::set<std::pair<int, int>> seen;
-    for (const Edge& e : g.edges)
+    for (const Edge &e : g.edges)
     {
         int a = e.src < e.dest ? e.src : e.dest;
         int b = e.src < e.dest ? e.dest : e.src;
