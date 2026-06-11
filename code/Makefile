@@ -1,7 +1,7 @@
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -Iinclude -isystem external
 
-SRC = main.cpp src/Image.cpp src/CLI.cpp
+SRC = main.cpp src/Image.cpp src/CLI.cpp src/Graph.cpp src/UnionFind.cpp src/FelzenszwalbSegmenter.cpp
 OUT = segmentador
 
 ifeq ($(OS),Windows_NT)
