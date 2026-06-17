@@ -1,7 +1,7 @@
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -Iinclude -isystem external
 
-SRC = main.cpp src/Image.cpp src/CLI.cpp src/Graph.cpp src/UnionFind.cpp src/FelzenszwalbSegmenter.cpp
+SRC = main.cpp src/Image.cpp src/CLI.cpp src/Graph.cpp src/UnionFind.cpp src/FelzenszwalbSegmenter.cpp src/MST.cpp src/CoustySegmenter.cpp
 OUT = segmentador
 
 ifeq ($(OS),Windows_NT)
@@ -30,4 +30,7 @@ run-example: $(TARGET)
 run-gray: $(TARGET)
 	$(RUN_PREFIX)$(TARGET) --input data/input/flor.jpg --output data/output/cinza.png --method copy --gray
 
-.PHONY: all clean run-example run-gray
+run-cousty: $(TARGET)
+	$(RUN_PREFIX)$(TARGET) --input data/input/flor.jpg --output data/output/cousty.png --method cousty --threshold 40
+
+.PHONY: all clean run-example run-gray run-cousty

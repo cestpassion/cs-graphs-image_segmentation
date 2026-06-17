@@ -1,10 +1,82 @@
 #include "CLI.hpp"
+#include "CoustySegmenter.hpp"
+#include "FelzenszwalbSegmenter.hpp"
 #include "Image.hpp"
 #include "Graph.hpp"
-#include "FelzenszwalbSegmenter.hpp"
 #include <vector>
 
 #include <iostream>
+
+namespace {
+
+std::function<double(int, int)> makeWeightFunction(Image& image) {
+    // Acabei criando esse método para evitar repetição de código
+
+    return [&image](int u, int v) -> double {
+        auto [xu, yu] = idToCoord(u, image.width);
+        auto [xv, yv] = idToCoord(v, image.width);
+
+        if (image.channels == 1) {
+            return grayWeight(image.getPixel(xu, yu, 0), image.getPixel(xv, yv, 0));
+        }
+
+        return colorWeight(
+            image.getPixel(xu, yu, 0), image.getPixel(xu, yu, 1), image.getPixel(xu, yu, 2),
+            image.getPixel(xv, yv, 0), image.getPixel(xv, yv, 1), image.getPixel(xv, yv, 2)
+        );
+    };
+}
+
+bool endsWithSlash(const std::string& value) {
+    return !value.empty() && (value.back() == '/' || value.back() == '\\');
+}
+
+std::string buildOutputName(const std::string& baseOutput, int threshold, bool multiLevel) {
+    // Gerar por exemplo, cousty20.png, cousty40.png, etc.
+    if (!multiLevel) {
+        return baseOutput;
+    }
+
+    std::size_t slash = baseOutput.find_last_of("/\\");
+    std::size_t dot = baseOutput.find_last_of('.');
+
+    if (endsWithSlash(baseOutput) || dot == std::string::npos || (slash != std::string::npos && dot < slash)) {
+        std::string directory = baseOutput;
+        if (!endsWithSlash(directory)) {
+            directory += '/';
+        }
+        return directory + "cousty" + std::to_string(threshold) + ".png";
+    }
+
+    return baseOutput.substr(0, dot) + std::to_string(threshold) + baseOutput.substr(dot);
+}
+
+std::string buildSaliencyName(const std::string& baseOutput, int threshold, bool multiLevel) {
+    // O arquivo de saliência usa o mesmo padrão do segmento para facilitar a
+    // leitura lado a lado durante a comparação das hierarquias.
+    if (!multiLevel) {
+        std::size_t slash = baseOutput.find_last_of("/\\");
+        std::size_t dot = baseOutput.find_last_of('.');
+
+        if (dot == std::string::npos || (slash != std::string::npos && dot < slash)) {
+            return baseOutput + "_saliency.png";
+        }
+
+        return baseOutput.substr(0, dot) + "_saliency" + baseOutput.substr(dot);
+    }
+
+    std::size_t slash = baseOutput.find_last_of("/\\");
+    std::string directory = (slash == std::string::npos) ? std::string() : baseOutput.substr(0, slash + 1);
+    if (!endsWithSlash(baseOutput) && (slash == std::string::npos || baseOutput.find_last_of('.') != std::string::npos)) {
+        directory = baseOutput.substr(0, slash + 1);
+    }
+    if (directory.empty()) {
+        directory = "./";
+    }
+    return directory + "cousty" + std::to_string(threshold) + "_saliency.png";
+}
+
+}  // namespace
 
 int main(int argc, char* argv[]) {
     CLIOptions options = CLI::parse(argc, argv);
@@ -67,26 +139,7 @@ int main(int argc, char* argv[]) {
 
         // 1. Define o tipo de vizinhanca (4 ou 8) a partir dos argumentos da CLI
         Connectivity conn = (options.neighborhood == 8) ? Connectivity::EIGHT : Connectivity::FOUR;
-
-        // 2. Cria a funcao que calcula o peso (diferenca) entre dois pixels
-        auto weightFunc = [&image](int u, int v) -> double {
-            auto [xu, yu] = idToCoord(u, image.width);
-            auto [xv, yv] = idToCoord(v, image.width);
-
-            if (image.channels == 1) { // Imagem em tons de cinza
-                int i1 = image.getPixel(xu, yu, 0);
-                int i2 = image.getPixel(xv, yv, 0);
-                return grayWeight(i1, i2);
-            } else { // Imagem colorida (RGB)
-                int r1 = image.getPixel(xu, yu, 0);
-                int g1 = image.getPixel(xu, yu, 1);
-                int b1 = image.getPixel(xu, yu, 2);
-                int r2 = image.getPixel(xv, yv, 0);
-                int g2 = image.getPixel(xv, yv, 1);
-                int b2 = image.getPixel(xv, yv, 2);
-                return colorWeight(r1, g1, b1, r2, g2, b2);
-            }
-        };
+        auto weightFunc = makeWeightFunction(image);
 
         // 3. Constroi a malha do grafo
         std::cout << "Construindo o grafo..." << std::endl;
@@ -99,6 +152,72 @@ int main(int argc, char* argv[]) {
         // 5. Transforma o vetor de labels de volta em uma imagem visualmente colorida
         std::cout << "Gerando imagem de saida..." << std::endl;
         image = Image::createColoredLabelImage(labels, image.width, image.height);
+    }
+    else if (options.method == "cousty") {
+        std::cout << "Executando metodo de Cousty..." << std::endl;
+
+        Connectivity conn = (options.neighborhood == 8) ? Connectivity::EIGHT : Connectivity::FOUR;
+        auto weightFunc = makeWeightFunction(image);
+
+        // Primeiro criamos o grafo da imagem e depois comprimimos isso em uma
+        // MST. A hierarquia passa a depender só do limiar aplicado sobre essa árvore.
+        std::cout << "Construindo o grafo..." << std::endl;
+        Graph graph = buildGraph(image.width, image.height, conn, weightFunc);
+        std::cout << "Construindo a MST..." << std::endl;
+        MST mst = buildMST(graph);
+
+        std::vector<int> thresholds = options.thresholds;
+        if (thresholds.empty()) {
+            thresholds.push_back(options.threshold);
+        }
+
+        bool multiLevel = thresholds.size() > 1;
+
+        for (int threshold : thresholds) {
+            // Cada threshold gera uma segmentação independente para permitir
+            // comparação visual direta entre níveis mais finos e mais grossos.
+            std::string thresholdMessage = "Segmentando (threshold=";
+            thresholdMessage += std::to_string(threshold);
+            thresholdMessage += ")...";
+            std::cout << thresholdMessage << std::endl;
+
+            std::vector<int> labels = segmentCoustyByThreshold(
+                mst,
+                static_cast<double>(threshold)
+            );
+            Image segmented = Image::createColoredLabelImage(
+                labels,
+                image.width,
+                image.height
+            );
+
+            std::string outputName = buildOutputName(
+                options.outputPath,
+                threshold,
+                multiLevel
+            );
+            if (!segmented.save(outputName)) {
+                std::cerr << "Nao foi possivel salvar a imagem de saida." << std::endl;
+                return 1;
+            }
+
+            std::string saliencyName = buildSaliencyName(
+                options.outputPath,
+                threshold,
+                multiLevel
+            );
+            Image saliency = createCoustySaliencyImage(mst);
+            saliency.save(saliencyName);
+
+            if (!multiLevel) {
+                image = segmented;
+            }
+        }
+
+        if (multiLevel) {
+            std::cout << "Multiplos niveis salvos com sucesso." << std::endl;
+            return 0;
+        }
     }
     else {
         std::cout << "Aviso: o metodo '" << options.method << "' ainda sera implementado em outra Issue." << std::endl;
