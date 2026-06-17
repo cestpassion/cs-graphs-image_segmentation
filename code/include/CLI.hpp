@@ -1,6 +1,7 @@
 #ifndef CLI_HPP
 #define CLI_HPP
 
+#include <vector>
 #include <string>
 
 struct CLIOptions {
@@ -16,6 +17,7 @@ struct CLIOptions {
     double k = 300.0;
     int minSize = 20;
     int threshold = 40;
+    std::vector<int> thresholds; // para que possa passar mais de um (ex: 20,40,80)
 
     std::string seedsPath;
 

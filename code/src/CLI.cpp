@@ -1,8 +1,44 @@
 #include "CLI.hpp"
 
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
+
+namespace {
+
+std::vector<int> parseThresholdList(const std::string& value, bool& valid, std::string& errorMessage) {
+    // A lista foi implementada como CSV simples para manter a CLI legível sem
+    // introduzir dependências novas ou sintaxe mais pesada.
+    std::vector<int> thresholds;
+    std::stringstream stream(value);
+    std::string token;
+
+    while (std::getline(stream, token, ',')) {
+        if (token.empty()) {
+            valid = false;
+            errorMessage = "A lista de thresholds nao pode conter valores vazios.";
+            return {};
+        }
+
+        try {
+            thresholds.push_back(std::stoi(token));
+        } catch (const std::exception&) {
+            valid = false;
+            errorMessage = "O valor de --thresholds deve conter inteiros separados por virgula.";
+            return {};
+        }
+    }
+
+    if (thresholds.empty()) {
+        valid = false;
+        errorMessage = "O argumento --thresholds exige pelo menos um valor.";
+    }
+
+    return thresholds;
+}
+
+}  // namespace
 
 CLIOptions CLI::parse(int argc, char* argv[]) {
     CLIOptions options;
@@ -65,6 +101,8 @@ CLIOptions CLI::parse(int argc, char* argv[]) {
                 return options;
             }
         } else if (arg == "--threshold") {
+            // Mantemos --threshold para o caso de uso de um único resultado,
+            // mas a opção --thresholds é a que habilita a hierarquia em lote.
             std::string value = requireValue(i, "--threshold");
 
             try {
@@ -72,6 +110,12 @@ CLIOptions CLI::parse(int argc, char* argv[]) {
             } catch (const std::exception&) {
                 options.valid = false;
                 options.errorMessage = "O valor de --threshold deve ser inteiro.";
+                return options;
+            }
+        } else if (arg == "--thresholds") {
+            std::string value = requireValue(i, "--thresholds");
+            options.thresholds = parseThresholdList(value, options.valid, options.errorMessage);
+            if (!options.valid) {
                 return options;
             }
         } else if (arg == "--seeds") {
@@ -121,6 +165,7 @@ void CLI::printHelp() {
     std::cout << "  --k <valor>              Parametro do metodo de Felzenszwalb\n";
     std::cout << "  --min_size <valor>       Tamanho minimo de componente\n";
     std::cout << "  --threshold <valor>      Limiar usado no metodo hierarquico\n";
+    std::cout << "  --thresholds <a,b,c>     Lista de limiares para varios niveis\n";
     std::cout << "  --seeds <arquivo>        Arquivo de sementes para IFT\n\n";
 
     std::cout << "Exemplos:\n";
@@ -129,5 +174,6 @@ void CLI::printHelp() {
     std::cout << "Exemplos apos a implementacao dos algoritmos:\n";
     std::cout << "  ./segmentador --input data/input/flor.png --output data/output/fh.png --method felzenszwalb --k 300 --min_size 20\n";
     std::cout << "  ./segmentador --input data/input/flor.png --output data/output/cousty.png --method cousty --threshold 40\n";
+    std::cout << "  ./segmentador --input data/input/flor.png --output data/output/ --method cousty --thresholds 20,40,80\n";
     std::cout << "  ./segmentador --input data/input/flor.png --output data/output/ift.png --method ift --seeds data/input/seeds.txt\n";
 }
