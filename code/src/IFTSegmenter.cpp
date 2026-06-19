@@ -10,7 +10,7 @@
 #include "PriorityQueue.hpp"
 
 namespace {
-
+//issue #5
 // Constroi uma lista de adjacencia (bidirecional) a partir das arestas do
 // grafo. O Graph guarda cada aresta {u,v} uma unica vez (sem duplicata), mas a
 // IFT precisa propagar nos dois sentidos, entao espelhamos cada aresta.
