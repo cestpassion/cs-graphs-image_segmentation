@@ -8,6 +8,8 @@
 namespace {
 
 std::vector<int> parseThresholdList(const std::string& value, bool& valid, std::string& errorMessage) {
+    // A lista foi implementada como CSV simples para manter a CLI legível sem
+    // introduzir dependências novas ou sintaxe mais pesada.
     std::vector<int> thresholds;
     std::stringstream stream(value);
     std::string token;
@@ -50,26 +52,6 @@ CLIOptions CLI::parse(int argc, char* argv[]) {
 
         i++;
         return argv[i];
-    };
-
-    // Le um inteiro de argv[i+1], avancando i. Em erro, marca options invalido.
-    auto requireInt = [&](int& i, const std::string& argumentName, bool& okOut) -> int {
-        okOut = false;
-        if (i + 1 >= argc) {
-            options.valid = false;
-            options.errorMessage = "O argumento " + argumentName + " exige um valor.";
-            return 0;
-        }
-        i++;
-        try {
-            int parsed = std::stoi(argv[i]);
-            okOut = true;
-            return parsed;
-        } catch (const std::exception&) {
-            options.valid = false;
-            options.errorMessage = "O valor de " + argumentName + " deve ser inteiro.";
-            return 0;
-        }
     };
 
     for (int i = 1; i < argc; i++) {
@@ -138,32 +120,6 @@ CLIOptions CLI::parse(int argc, char* argv[]) {
             }
         } else if (arg == "--seeds") {
             options.seedsPath = requireValue(i, "--seeds");
-        } else if (arg == "--seed") {
-            // Semente manual: --seed <x> <y> <label>. Pode repetir varias vezes.
-            bool okX = false, okY = false, okL = false;
-            int x = requireInt(i, "--seed (x)", okX);
-            if (!options.valid) return options;
-            int y = requireInt(i, "--seed (y)", okY);
-            if (!options.valid) return options;
-            int label = requireInt(i, "--seed (label)", okL);
-            if (!options.valid) return options;
-            if (okX && okY && okL) {
-                options.manualSeeds.push_back(x);
-                options.manualSeeds.push_back(y);
-                options.manualSeeds.push_back(label);
-            }
-        } else if (arg == "--auto-seeds") {
-            // Sementes automaticas em grade: --auto-seeds <rows> <cols>.
-            bool okR = false, okC = false;
-            int rows = requireInt(i, "--auto-seeds (rows)", okR);
-            if (!options.valid) return options;
-            int cols = requireInt(i, "--auto-seeds (cols)", okC);
-            if (!options.valid) return options;
-            if (okR && okC) {
-                options.autoSeeds = true;
-                options.autoSeedRows = rows;
-                options.autoSeedCols = cols;
-            }
         } else {
             options.valid = false;
             options.errorMessage = "Argumento desconhecido: " + arg;
@@ -205,23 +161,19 @@ void CLI::printHelp() {
     std::cout << "  --neighborhood <4|8>     Tipo de vizinhanca dos pixels\n";
     std::cout << "  --help, -h               Mostra esta ajuda\n\n";
 
-    std::cout << "Parametros dos algoritmos:\n";
+    std::cout << "Parametros futuros dos algoritmos:\n";
     std::cout << "  --k <valor>              Parametro do metodo de Felzenszwalb\n";
     std::cout << "  --min_size <valor>       Tamanho minimo de componente\n";
     std::cout << "  --threshold <valor>      Limiar usado no metodo hierarquico\n";
-    std::cout << "  --thresholds <a,b,c>     Lista de limiares para varios niveis\n\n";
-
-    std::cout << "Sementes do metodo IFT (escolha uma das formas):\n";
-    std::cout << "  --seeds <arquivo>        Arquivo de sementes (linhas 'x y label')\n";
-    std::cout << "  --seed <x> <y> <label>   Semente manual; pode repetir o argumento\n";
-    std::cout << "  --auto-seeds <r> <c>     Grade automatica de r x c sementes\n\n";
+    std::cout << "  --thresholds <a,b,c>     Lista de limiares para varios niveis\n";
+    std::cout << "  --seeds <arquivo>        Arquivo de sementes para IFT\n\n";
 
     std::cout << "Exemplos:\n";
     std::cout << "  ./segmentador --input data/input/flor.png --output data/output/copia.png --method copy --color\n";
     std::cout << "  ./segmentador --input data/input/flor.png --output data/output/cinza.png --method copy --gray\n";
+    std::cout << "Exemplos apos a implementacao dos algoritmos:\n";
     std::cout << "  ./segmentador --input data/input/flor.png --output data/output/fh.png --method felzenszwalb --k 300 --min_size 20\n";
     std::cout << "  ./segmentador --input data/input/flor.png --output data/output/cousty.png --method cousty --threshold 40\n";
-    std::cout << "  ./segmentador --input data/input/flor.png --output data/output/ift.png --method ift --seeds seeds.txt\n";
-    std::cout << "  ./segmentador --input data/input/flor.png --output data/output/ift.png --method ift --seed 10 20 1 --seed 100 50 2\n";
-    std::cout << "  ./segmentador --input data/input/flor.png --output data/output/ift.png --method ift --auto-seeds 3 3\n";
+    std::cout << "  ./segmentador --input data/input/flor.png --output data/output/ --method cousty --thresholds 20,40,80\n";
+    std::cout << "  ./segmentador --input data/input/flor.png --output data/output/ift.png --method ift --seeds data/input/seeds.txt\n";
 }
