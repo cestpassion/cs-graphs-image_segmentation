@@ -1,0 +1,28 @@
+# Executaveis
+segmentador
+segmentador.exe
+**/segmentador
+**/segmentador.exe
+
+# Arquivos temporarios de compilacao
+*.o
+*.obj
+*.out
+
+# Build folders
+build/
+cmake-build-*/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# Saidas geradas
+data/output/*
+code/data/output/*
+!data/output/.gitkeep
+!code/data/output/.gitkeep
