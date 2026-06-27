@@ -21,6 +21,13 @@ struct CLIOptions {
 
     std::string seedsPath;
 
+  
+    std::vector<int> manualSeeds;
+
+    bool autoSeeds = false;
+    int autoSeedRows = 0;
+    int autoSeedCols = 0;
+
     bool help = false;
     bool valid = true;
     std::string errorMessage;
