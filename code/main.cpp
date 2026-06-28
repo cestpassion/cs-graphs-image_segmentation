@@ -13,20 +13,12 @@
 
 namespace fs = std::filesystem;
 
-void processSingleImage(std::string inputPath, std::string outputDir, const CLIOptions& options) {
+void processSingleImage(std::string inputPath, std::string outPrefix, const CLIOptions& options) {
     Image orgImage;
     if (!orgImage.load(inputPath)) {
         std::cerr << "Erro ao carregar: " << inputPath << std::endl;
         return;
     }
-
-    std::string filename = fs::path(inputPath).stem().string();
-    if (outputDir != ".") {
-        fs::create_directories(outputDir);
-    }
-    
-    // Formata o prefixo do caminho de saída para manter organizado
-    std::string outPrefix = (outputDir == ".") ? filename : (outputDir + "/" + filename);
 
     Image procImage = options.useMedian ? orgImage.applyMedianFilter() : orgImage;
     if (options.gray) {
@@ -36,7 +28,7 @@ void processSingleImage(std::string inputPath, std::string outputDir, const CLIO
     // Tratamento direto para o método copy
     if (options.method == "copy") {
         procImage.save(outPrefix + "_copy.png");
-        std::cout << "Sucesso no processamento de (copy): " << filename << std::endl;
+        std::cout << "Sucesso no processamento de (copy): " << outPrefix << std::endl;
         return;
     }
 
@@ -83,7 +75,7 @@ void processSingleImage(std::string inputPath, std::string outputDir, const CLIO
         
         Image saliency = createCoustySaliencyImage(mst);
         saliency.save(outPrefix + "_cousty_saliency.png");
-        std::cout << "Sucesso no processamento de: " << filename << std::endl;
+        std::cout << "Sucesso no processamento de: " << outPrefix << std::endl;
         return; // Retorna pois o Cousty já processou as múltiplas saídas no laço
     } 
     else if (options.method == "ift") {
@@ -100,7 +92,7 @@ void processSingleImage(std::string inputPath, std::string outputDir, const CLIO
         }
         
         if (!ok || seeds.empty()) {
-            std::cerr << "Erro: Nenhuma semente valida fornecida para o metodo IFT em " << filename << std::endl;
+            std::cerr << "Erro: Nenhuma semente valida fornecida para o metodo IFT em " << inputPath << std::endl;
             return;
         }
         
@@ -123,7 +115,9 @@ void processSingleImage(std::string inputPath, std::string outputDir, const CLIO
         Image boundImg = Image::createBoundaryLabelImage(labels, orgImage);
         boundImg.save(outPrefix + "_" + options.method + "_boundary.png");
         
-        std::cout << "Sucesso no processamento de: " << filename << std::endl;
+        std::cout << "Sucesso no processamento de: " << outPrefix << std::endl;
+    } else {
+        std::cerr << "Erro: A segmentacao nao gerou regioes validas para " << inputPath << std::endl;
     }
 }
 
@@ -137,23 +131,30 @@ int main(int argc, char* argv[]) {
     }
 
     if (options.batchMode) {
-        std::string inputDir = options.inputPath;
-        if (!fs::is_directory(inputDir)) {
-            std::cerr << "Para modo batch, --input deve indicar uma pasta valida (ex: data/input/)" << std::endl;
-            return 1;
-        }
-        for (const auto& entry : fs::directory_iterator(inputDir)) {
+        fs::create_directories(options.outputPath);
+        
+        for (const auto& entry : fs::directory_iterator(options.inputPath)) {
             if (entry.is_regular_file()) {
                 std::string ext = entry.path().extension().string();
                 if (ext == ".jpg" || ext == ".jpeg" || ext == ".png") {
-                    processSingleImage(entry.path().string(), options.outputPath, options);
+                    std::string filename = entry.path().stem().string();
+                    std::string outPrefix = options.outputPath + "/" + filename;
+                    processSingleImage(entry.path().string(), outPrefix, options);
                 }
             }
         }
     } else {
-        fs::path outDir = fs::path(options.outputPath).parent_path();
-        std::string dirStr = outDir.empty() ? "." : outDir.string();
-        processSingleImage(options.inputPath, dirStr, options);
+        fs::path outPath(options.outputPath);
+        fs::path parent = outPath.parent_path();
+        if (!parent.empty()) {
+            fs::create_directories(parent);
+        }
+        
+        std::string outPrefix = parent.string();
+        if (!outPrefix.empty()) outPrefix += "/";
+        outPrefix += outPath.stem().string();
+        
+        processSingleImage(options.inputPath, outPrefix, options);
     }
 
     return 0;

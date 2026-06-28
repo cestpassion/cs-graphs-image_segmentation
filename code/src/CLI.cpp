@@ -150,9 +150,9 @@ CLIOptions CLI::parse(int argc, char* argv[]) {
             options.valid = false;
             options.errorMessage = "O caminho de entrada (--input) e obrigatorio.";
         }
-        if (!options.batchMode && options.outputPath.empty()) {
+        if (options.outputPath.empty()) {
             options.valid = false;
-            options.errorMessage = "O caminho de saida (--output) e obrigatorio no modo single-image.";
+            options.errorMessage = "O caminho de saida (--output) e obrigatorio.";
         }
         if (options.gray && options.color) {
             options.valid = false;
