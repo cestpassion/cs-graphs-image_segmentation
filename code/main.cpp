@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <functional>
 #include <vector>
+#include <stdexcept>
 
 namespace fs = std::filesystem;
 
@@ -25,10 +26,12 @@ void processSingleImage(std::string inputPath, std::string outPrefix, const CLIO
         procImage = procImage.toGrayscale();
     }
 
-    // Tratamento direto para o método copy
     if (options.method == "copy") {
-        procImage.save(outPrefix + "_copy.png");
-        std::cout << "Sucesso no processamento de (copy): " << outPrefix << std::endl;
+        if (!procImage.save(outPrefix + "_copy.png")) {
+            std::cerr << "Erro I/O: Nao foi possivel salvar imagem de copia: " << outPrefix << std::endl;
+        } else {
+            std::cout << "Sucesso no processamento de (copy): " << outPrefix << std::endl;
+        }
         return;
     }
 
@@ -60,23 +63,29 @@ void processSingleImage(std::string inputPath, std::string outPrefix, const CLIO
         for (int t : thresholds) {
             labels = segmentCoustyByThreshold(mst, t);
             
-            // Se tiver múltiplos thresholds, salva identificando-os
             std::string t_suffix = (thresholds.size() > 1) ? ("_t" + std::to_string(t)) : "";
             
             Image randImg = Image::createColoredLabelImage(labels, procImage.width, procImage.height);
-            randImg.save(outPrefix + "_cousty" + t_suffix + "_random.png");
-
             Image avgImg = Image::createAvgColorLabelImage(labels, orgImage);
-            avgImg.save(outPrefix + "_cousty" + t_suffix + "_avg.png");
-
             Image boundImg = Image::createBoundaryLabelImage(labels, orgImage);
-            boundImg.save(outPrefix + "_cousty" + t_suffix + "_boundary.png");
+
+            bool ok = true;
+            ok &= randImg.save(outPrefix + "_cousty" + t_suffix + "_random.png");
+            ok &= avgImg.save(outPrefix + "_cousty" + t_suffix + "_avg.png");
+            ok &= boundImg.save(outPrefix + "_cousty" + t_suffix + "_boundary.png");
+
+            if (!ok) {
+                std::cerr << "Erro I/O: Falha ao salvar as imagens Cousty para limiar " << t << std::endl;
+            }
         }
         
         Image saliency = createCoustySaliencyImage(mst);
-        saliency.save(outPrefix + "_cousty_saliency.png");
-        std::cout << "Sucesso no processamento de: " << outPrefix << std::endl;
-        return; // Retorna pois o Cousty já processou as múltiplas saídas no laço
+        if (!saliency.save(outPrefix + "_cousty_saliency.png")) {
+            std::cerr << "Erro I/O: Falha ao salvar mapa de saliencia Cousty." << std::endl;
+        } else {
+            std::cout << "Sucesso no processamento de: " << outPrefix << std::endl;
+        }
+        return; 
     } 
     else if (options.method == "ift") {
         bool ok = true;
@@ -99,7 +108,9 @@ void processSingleImage(std::string inputPath, std::string outPrefix, const CLIO
         IFTResult iftRes = runIFT(graph, seeds);
         labels = iftRes.label;
         Image costImg = createIFTCostImage(iftRes, procImage.width, procImage.height);
-        costImg.save(outPrefix + "_ift_cost.png");
+        if (!costImg.save(outPrefix + "_ift_cost.png")) {
+            std::cerr << "Erro I/O: Falha ao salvar mapa de custos do IFT." << std::endl;
+        }
     } else {
         std::cerr << "Erro: Metodo invalido '" << options.method << "'." << std::endl;
         return;
@@ -107,15 +118,19 @@ void processSingleImage(std::string inputPath, std::string outPrefix, const CLIO
 
     if (!labels.empty()) {
         Image randImg = Image::createColoredLabelImage(labels, procImage.width, procImage.height);
-        randImg.save(outPrefix + "_" + options.method + "_random.png");
-
         Image avgImg = Image::createAvgColorLabelImage(labels, orgImage);
-        avgImg.save(outPrefix + "_" + options.method + "_avg.png");
-
         Image boundImg = Image::createBoundaryLabelImage(labels, orgImage);
-        boundImg.save(outPrefix + "_" + options.method + "_boundary.png");
         
-        std::cout << "Sucesso no processamento de: " << outPrefix << std::endl;
+        bool ok = true;
+        ok &= randImg.save(outPrefix + "_" + options.method + "_random.png");
+        ok &= avgImg.save(outPrefix + "_" + options.method + "_avg.png");
+        ok &= boundImg.save(outPrefix + "_" + options.method + "_boundary.png");
+
+        if (!ok) {
+            std::cerr << "Erro I/O: Falha ao salvar as imagens processadas finais para " << outPrefix << std::endl;
+        } else {
+            std::cout << "Sucesso no processamento de: " << outPrefix << std::endl;
+        }
     } else {
         std::cerr << "Erro: A segmentacao nao gerou regioes validas para " << inputPath << std::endl;
     }
@@ -131,30 +146,44 @@ int main(int argc, char* argv[]) {
     }
 
     if (options.batchMode) {
-        fs::create_directories(options.outputPath);
-        
-        for (const auto& entry : fs::directory_iterator(options.inputPath)) {
-            if (entry.is_regular_file()) {
-                std::string ext = entry.path().extension().string();
-                if (ext == ".jpg" || ext == ".jpeg" || ext == ".png") {
-                    std::string filename = entry.path().stem().string();
-                    std::string outPrefix = options.outputPath + "/" + filename;
-                    processSingleImage(entry.path().string(), outPrefix, options);
+        try {
+            if (!fs::exists(options.inputPath) || !fs::is_directory(options.inputPath)) {
+                std::cerr << "Erro: O argumento --input '" << options.inputPath << "' nao e um diretorio valido.\n";
+                return 1;
+            }
+            fs::create_directories(options.outputPath);
+            
+            for (const auto& entry : fs::directory_iterator(options.inputPath)) {
+                if (entry.is_regular_file()) {
+                    std::string ext = entry.path().extension().string();
+                    if (ext == ".jpg" || ext == ".jpeg" || ext == ".png") {
+                        std::string filename = entry.path().stem().string();
+                        std::string outPrefix = options.outputPath + "/" + filename;
+                        processSingleImage(entry.path().string(), outPrefix, options);
+                    }
                 }
             }
+        } catch (const fs::filesystem_error& e) {
+            std::cerr << "Erro critico no sistema de arquivos durante modo batch: " << e.what() << std::endl;
+            return 1;
         }
     } else {
-        fs::path outPath(options.outputPath);
-        fs::path parent = outPath.parent_path();
-        if (!parent.empty()) {
-            fs::create_directories(parent);
+        try {
+            fs::path outPath(options.outputPath);
+            fs::path parent = outPath.parent_path();
+            if (!parent.empty()) {
+                fs::create_directories(parent);
+            }
+            
+            std::string outPrefix = parent.string();
+            if (!outPrefix.empty()) outPrefix += "/";
+            outPrefix += outPath.stem().string();
+            
+            processSingleImage(options.inputPath, outPrefix, options);
+        } catch (const std::exception& e) {
+            std::cerr << "Erro critico no sistema de arquivos: " << e.what() << std::endl;
+            return 1;
         }
-        
-        std::string outPrefix = parent.string();
-        if (!outPrefix.empty()) outPrefix += "/";
-        outPrefix += outPath.stem().string();
-        
-        processSingleImage(options.inputPath, outPrefix, options);
     }
 
     return 0;

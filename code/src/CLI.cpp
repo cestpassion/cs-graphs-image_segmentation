@@ -101,7 +101,7 @@ CLIOptions CLI::parse(int argc, char* argv[]) {
         } else if (arg == "--k") {
             bool ok;
             options.k = requireDouble(i, arg, ok);
-        } else if (arg == "--min_size") {
+        } else if (arg == "--min_size" || arg == "--min-size") {
             bool ok;
             options.minSize = requireInt(i, arg, ok);
         } else if (arg == "--threshold") {
