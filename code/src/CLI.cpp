@@ -43,172 +43,146 @@ std::vector<int> parseThresholdList(const std::string& value, bool& valid, std::
 CLIOptions CLI::parse(int argc, char* argv[]) {
     CLIOptions options;
 
-    auto requireValue = [&](int& i, const std::string& argumentName) -> std::string {
+    auto requireValue = [&](int& i, const std::string& argName) -> std::string {
         if (i + 1 >= argc) {
             options.valid = false;
-            options.errorMessage = "O argumento " + argumentName + " exige um valor.";
+            options.errorMessage = "Falta valor para o argumento " + argName;
             return "";
         }
-
-        i++;
-        return argv[i];
+        return argv[++i];
     };
 
-    // Le um inteiro de argv[i+1], avancando i. Em erro, marca options invalido.
-    auto requireInt = [&](int& i, const std::string& argumentName, bool& okOut) -> int {
-        okOut = false;
-        if (i + 1 >= argc) {
-            options.valid = false;
-            options.errorMessage = "O argumento " + argumentName + " exige um valor.";
-            return 0;
-        }
-        i++;
+    auto requireInt = [&](int& i, const std::string& argName, bool& ok) -> int {
+        ok = false;
+        std::string val = requireValue(i, argName);
+        if (!options.valid) return 0;
         try {
-            int parsed = std::stoi(argv[i]);
-            okOut = true;
+            int parsed = std::stoi(val);
+            ok = true;
             return parsed;
-        } catch (const std::exception&) {
+        } catch (...) {
             options.valid = false;
-            options.errorMessage = "O valor de " + argumentName + " deve ser inteiro.";
+            options.errorMessage = "O argumento " + argName + " deve ser um numero inteiro.";
             return 0;
         }
     };
 
-    for (int i = 1; i < argc; i++) {
+    auto requireDouble = [&](int& i, const std::string& argName, bool& ok) -> double {
+        ok = false;
+        std::string val = requireValue(i, argName);
+        if (!options.valid) return 0.0;
+        try {
+            double parsed = std::stod(val);
+            ok = true;
+            return parsed;
+        } catch (...) {
+            options.valid = false;
+            options.errorMessage = "O argumento " + argName + " deve ser numerico.";
+            return 0.0;
+        }
+    };
+
+    for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
 
-        if (arg == "--help" || arg == "-h") {
-            options.help = true;
-            return options;
-        } else if (arg == "--input") {
-            options.inputPath = requireValue(i, "--input");
-        } else if (arg == "--output") {
-            options.outputPath = requireValue(i, "--output");
-        } else if (arg == "--method") {
-            options.method = requireValue(i, "--method");
-        } else if (arg == "--neighborhood") {
-            std::string value = requireValue(i, "--neighborhood");
-
-            try {
-                options.neighborhood = std::stoi(value);
-            } catch (const std::exception&) {
-                options.valid = false;
-                options.errorMessage = "O valor de --neighborhood deve ser 4 ou 8.";
-                return options;
-            }
-        } else if (arg == "--gray") {
-            options.gray = true;
+        if (arg == "--input" || arg == "-i") {
+            options.inputPath = requireValue(i, arg);
+        } else if (arg == "--output" || arg == "-o") {
+            options.outputPath = requireValue(i, arg);
+        } else if (arg == "--method" || arg == "-m") {
+            options.method = requireValue(i, arg);
         } else if (arg == "--color") {
             options.color = true;
+        } else if (arg == "--gray") {
+            options.gray = true;
+        } else if (arg == "--neighborhood") {
+            bool ok;
+            options.neighborhood = requireInt(i, arg, ok);
         } else if (arg == "--k") {
-            std::string value = requireValue(i, "--k");
-
-            try {
-                options.k = std::stod(value);
-            } catch (const std::exception&) {
-                options.valid = false;
-                options.errorMessage = "O valor de --k deve ser numerico.";
-                return options;
-            }
+            bool ok;
+            options.k = requireDouble(i, arg, ok);
         } else if (arg == "--min_size" || arg == "--min-size") {
-            std::string value = requireValue(i, arg);
-
-            try {
-                options.minSize = std::stoi(value);
-            } catch (const std::exception&) {
-                options.valid = false;
-                options.errorMessage = "O valor de " + arg + " deve ser inteiro.";
-                return options;
-            }
+            bool ok;
+            options.minSize = requireInt(i, arg, ok);
         } else if (arg == "--threshold") {
-            // Mantemos --threshold para o caso de uso de um único resultado,
-            // mas a opção --thresholds é a que habilita a hierarquia em lote.
-            std::string value = requireValue(i, "--threshold");
-
-            try {
-                options.threshold = std::stoi(value);
-            } catch (const std::exception&) {
-                options.valid = false;
-                options.errorMessage = "O valor de --threshold deve ser inteiro.";
-                return options;
-            }
+            bool ok;
+            options.threshold = requireInt(i, arg, ok);
         } else if (arg == "--thresholds") {
-            std::string value = requireValue(i, "--thresholds");
-            options.thresholds = parseThresholdList(value, options.valid, options.errorMessage);
-            if (!options.valid) {
-                return options;
-            }
+            std::string val = requireValue(i, arg);
+            if (options.valid) options.thresholds = parseThresholdList(val, options.valid, options.errorMessage);
         } else if (arg == "--seeds") {
-            options.seedsPath = requireValue(i, "--seeds");
+            options.seedsPath = requireValue(i, arg);
         } else if (arg == "--seed") {
-            // Semente manual: --seed <x> <y> <label>. Pode repetir varias vezes.
-            bool okX = false, okY = false, okL = false;
+            bool okX, okY, okL;
             int x = requireInt(i, "--seed (x)", okX);
-            if (!options.valid) return options;
+            if (!options.valid) break;
             int y = requireInt(i, "--seed (y)", okY);
-            if (!options.valid) return options;
+            if (!options.valid) break;
             int label = requireInt(i, "--seed (label)", okL);
-            if (!options.valid) return options;
+            if (!options.valid) break;
             if (okX && okY && okL) {
                 options.manualSeeds.push_back(x);
                 options.manualSeeds.push_back(y);
                 options.manualSeeds.push_back(label);
             }
         } else if (arg == "--auto-seeds") {
-            // Sementes automaticas em grade: --auto-seeds <rows> <cols>.
-            bool okR = false, okC = false;
-            int rows = requireInt(i, "--auto-seeds (rows)", okR);
-            if (!options.valid) return options;
-            int cols = requireInt(i, "--auto-seeds (cols)", okC);
-            if (!options.valid) return options;
-            if (okR && okC) {
-                options.autoSeeds = true;
-                options.autoSeedRows = rows;
-                options.autoSeedCols = cols;
-            }
+            options.autoSeeds = true;
+            bool okR, okC;
+            options.autoSeedRows = requireInt(i, "--auto-seeds (rows)", okR);
+            if (!options.valid) break;
+            options.autoSeedCols = requireInt(i, "--auto-seeds (cols)", okC);
+        } else if (arg == "--median") {
+            options.useMedian = true;
+        } else if (arg == "--batch") {
+            options.batchMode = true;
+        } else if (arg == "--help" || arg == "-h") {
+            options.help = true;
         } else {
             options.valid = false;
             options.errorMessage = "Argumento desconhecido: " + arg;
-            return options;
         }
 
-        if (!options.valid) {
-            return options;
+        if (!options.valid) break;
+    }
+
+    if (options.valid && !options.help) {
+        if (options.inputPath.empty()) {
+            options.valid = false;
+            options.errorMessage = "O caminho de entrada (--input) e obrigatorio.";
         }
-    }
-
-    if (options.gray && options.color) {
-        options.valid = false;
-        options.errorMessage = "Use apenas --gray ou --color, nao ambos.";
-        return options;
-    }
-
-    if (options.neighborhood != 4 && options.neighborhood != 8) {
-        options.valid = false;
-        options.errorMessage = "O valor de --neighborhood deve ser 4 ou 8.";
-        return options;
+        if (options.outputPath.empty()) {
+            options.valid = false;
+            options.errorMessage = "O caminho de saida (--output) e obrigatorio.";
+        }
+        if (options.gray && options.color) {
+            options.valid = false;
+            options.errorMessage = "Use apenas --gray ou --color, nao ambos.";
+        }
+        if (options.neighborhood != 4 && options.neighborhood != 8) {
+            options.valid = false;
+            options.errorMessage = "O valor de --neighborhood deve ser 4 ou 8.";
+        }
     }
 
     return options;
 }
 
 void CLI::printHelp() {
-    std::cout << "Uso:\n";
-    std::cout << "  ./segmentador --input <imagem> --output <saida> [opcoes]\n\n";
+    std::cout << "Uso: segmentador [opcoes]\n\n";
+    std::cout << "Opcoes principais:\n";
+    std::cout << "  --input <caminho>        Caminho da imagem de entrada ou diretorio (batch)\n";
+    std::cout << "  --output <caminho>       Caminho da imagem de saida ou diretorio (batch)\n";
+    std::cout << "  --method <metodo>        Metodo de segmentacao (copy, felzenszwalb, cousty, ift)\n";
+    std::cout << "  --color                  Forca leitura em modo colorido (RGB)\n";
+    std::cout << "  --gray                   Forca leitura em tons de cinza\n";
+    std::cout << "  --neighborhood <4|8>     Tipo de vizinhanca dos pixels\n\n";
 
-    std::cout << "Opcoes obrigatorias:\n";
-    std::cout << "  --input <caminho>        Caminho da imagem de entrada\n";
-    std::cout << "  --output <caminho>       Caminho da imagem de saida\n\n";
+    std::cout << "Novas Funcionalidades (Batch & Filtro):\n";
+    std::cout << "  --median                 Aplica filtro de mediana 3x3 antes do processamento\n";
+    std::cout << "  --batch                  Processa todos os arquivos do diretorio indicado em --input\n\n";
 
-    std::cout << "Opcoes gerais:\n";
-    std::cout << "  --method <metodo>        Metodo: copy, felzenszwalb, cousty ou ift\n";
-    std::cout << "  --gray                   Converte a imagem para tons de cinza\n";
-    std::cout << "  --color                  Mantem a imagem colorida\n";
-    std::cout << "  --neighborhood <4|8>     Tipo de vizinhanca dos pixels\n";
-    std::cout << "  --help, -h               Mostra esta ajuda\n\n";
-
-    std::cout << "Parametros dos algoritmos:\n";
-    std::cout << "  --k <valor>              Parametro do metodo de Felzenszwalb\n";
+    std::cout << "Parametros especificos:\n";
+    std::cout << "  --k <valor>              Parametro k (Felzenszwalb)\n";
     std::cout << "  --min_size <valor>       Tamanho minimo de componente\n";
     std::cout << "  --threshold <valor>      Limiar usado no metodo hierarquico\n";
     std::cout << "  --thresholds <a,b,c>     Lista de limiares para varios niveis\n\n";
@@ -218,12 +192,6 @@ void CLI::printHelp() {
     std::cout << "  --seed <x> <y> <label>   Semente manual; pode repetir o argumento\n";
     std::cout << "  --auto-seeds <r> <c>     Grade automatica de r x c sementes\n\n";
 
-    std::cout << "Exemplos:\n";
-    std::cout << "  ./segmentador --input data/input/flor.png --output data/output/copia.png --method copy --color\n";
-    std::cout << "  ./segmentador --input data/input/flor.png --output data/output/cinza.png --method copy --gray\n";
-    std::cout << "  ./segmentador --input data/input/flor.png --output data/output/fh.png --method felzenszwalb --k 300 --min_size 20\n";
-    std::cout << "  ./segmentador --input data/input/flor.png --output data/output/cousty.png --method cousty --threshold 40\n";
-    std::cout << "  ./segmentador --input data/input/flor.png --output data/output/ift.png --method ift --seeds seeds.txt\n";
-    std::cout << "  ./segmentador --input data/input/flor.png --output data/output/ift.png --method ift --seed 10 20 1 --seed 100 50 2\n";
-    std::cout << "  ./segmentador --input data/input/flor.png --output data/output/ift.png --method ift --auto-seeds 3 3\n";
+    std::cout << "Exemplo Batch:\n";
+    std::cout << "  ./segmentador --input data/input/ --output data/output/batch/ --method felzenszwalb --k 300 --median --batch\n";
 }

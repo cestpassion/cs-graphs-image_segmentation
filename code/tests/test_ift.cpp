@@ -153,6 +153,28 @@ static void testFileSeeds() {
     assert(!ok2);
 }
 
+static void testCostImageNormalization() {
+    IFTResult res;
+    // Forçando 4 custos artificiais para testar o mapeamento de cor (0.0 a 255)
+    res.cost = {0.0, 50.0, 100.0, std::numeric_limits<double>::infinity()};
+    
+    // Simula uma imagem 2x2
+    Image img = createIFTCostImage(res, 2, 2);
+    
+    assert(img.width == 2 && img.height == 2 && img.channels == 1);
+    assert(img.pixels.size() == 4);
+    
+    // Validação matemática:
+    // Custo 0.0 -> cor preta (0)
+    assert(img.pixels[0] == 0);
+    // Custo 50.0 (metade de maxCost 100.0) -> cor cinza (127 ou 128)
+    assert(img.pixels[1] == 127 || img.pixels[1] == 128);
+    // Custo 100.0 (maxCost real) -> cor branca (255)
+    assert(img.pixels[2] == 255);
+    // Infinity -> também é mapeado para branco (255)
+    assert(img.pixels[3] == 255);
+}
+
 int main() {
     testEveryPixelLabeled();
     testResultChangesWithSeeds();
@@ -161,6 +183,8 @@ int main() {
     testAutomaticSeeds();
     testCoordinateListSeeds();
     testFileSeeds();
+    testCostImageNormalization();
     std::cout << "Todos os testes de IFT passaram com sucesso!" << std::endl;
     return 0;
 }
+

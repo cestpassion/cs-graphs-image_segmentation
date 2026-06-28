@@ -209,3 +209,29 @@ std::vector<Seed> seedsFromCoordinateList(const std::vector<int>& values,
 
     return seeds;
 }
+
+Image createIFTCostImage(const IFTResult& result, int width, int height) {
+    Image costImg;
+    costImg.width = width;
+    costImg.height = height;
+    costImg.channels = 1;
+    costImg.pixels.resize(width * height);
+
+    double maxCost = 0.0;
+    for (double c : result.cost) {
+        if (c != std::numeric_limits<double>::infinity() && c > maxCost) {
+            maxCost = c;
+        }
+    }
+
+    std::size_t n = std::min(result.cost.size(), costImg.pixels.size());
+    for (std::size_t i = 0; i < n; ++i) {
+        if (result.cost[i] == std::numeric_limits<double>::infinity()) {
+            costImg.pixels[i] = 255;
+        } else {
+            double norm = maxCost > 0.0 ? (result.cost[i] / maxCost) : 0.0;
+            costImg.pixels[i] = static_cast<unsigned char>(std::clamp(norm * 255.0, 0.0, 255.0));
+        }
+    }
+    return costImg;
+}

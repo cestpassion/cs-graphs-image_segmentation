@@ -165,16 +165,21 @@ Esse comando remove o executável gerado.
 
 | Parâmetro        | Descrição                             |
 | ---------------- | ------------------------------------- |
-| `--input`        | Caminho da imagem de entrada          |
-| `--output`       | Caminho da imagem de saída            |
-| `--method`       | Método selecionado                    |
+| `--input`        | Caminho da imagem de entrada ou diretório (se usar `--batch`) |
+| `--output`       | Caminho da imagem de saída ou diretório (se usar `--batch`) |
+| `--method`       | Método selecionado (`copy`, `felzenszwalb`, `cousty`, `ift`) |
 | `--gray`         | Converte a imagem para tons de cinza  |
 | `--color`        | Mantém a imagem colorida              |
 | `--neighborhood` | Define vizinhança 4 ou 8              |
 | `--k`            | Parâmetro do método de Felzenszwalb   |
-| `--min_size`     | Tamanho mínimo de componente          |
-| `--threshold`    | Limiar usado no método hierárquico    |
+| `--min_size`     | Tamanho mínimo de componente (F&H)    |
+| `--threshold`    | Limiar usado no método hierárquico (Cousty) |
+| `--thresholds`   | Lista de limiares separados por vírgula (ex: `20,40,80`) |
 | `--seeds`        | Arquivo de sementes para o método IFT |
+| `--seed`         | Insere semente manualmente (formato: `x y label`). Pode ser repetido |
+| `--auto-seeds`   | Gera grade automática de sementes (formato: `linhas colunas`) |
+| `--median`       | Aplica filtro de mediana 3x3 antes da segmentação para reduzir ruídos |
+| `--batch`        | Processa todas as imagens do diretório de entrada de uma só vez |
 | `--help`         | Exibe a ajuda do programa             |
 
 ## Exemplos futuros de execução
@@ -196,6 +201,24 @@ Esse comando remove o executável gerado.
 ```bash
 ./segmentador --input data/input/exemplo.jpg --output data/output/ift.png --method ift --seeds data/input/seeds.txt --neighborhood 8
 ```
+
+### Processamento em Lote (Batch Mode) e Filtro de Mediana
+Processa todas as imagens da pasta de entrada, aplicando o filtro de mediana 3x3:
+```bash
+./segmentador --input data/input/ --output data/output/ --method felzenszwalb --k 300 --median --batch
+```
+
+## Saídas Geradas
+
+Ao executar os algoritmos de segmentação, o programa gera automaticamente múltiplas visualizações para facilitar a análise comparativa:
+
+* `_random.png`: Cada segmento recebe uma cor aleatória, destacando a partição.
+* `_avg.png`: Cada segmento é preenchido com a cor média daquela região na imagem original.
+* `_boundary.png`: Desenha as fronteiras dos segmentos em vermelho sobre a imagem original.
+
+**Mapas Intermediários:**
+* `_cousty_saliency.png`: Mapa de saliência gerado pelo método de Cousty.
+* `_ift_cost.png`: Mapa de custos indicando a dificuldade de conquista de cada pixel pelas sementes no método IFT.
 
 ## Documentação
 
@@ -240,10 +263,10 @@ report/
       </a>
     </td>
     <td align="center" width="140">
-      <a href="https://github.com/GabrielDev0001" title="Gabriel Henrique">
-        <img src="https://avatars.githubusercontent.com/u/157509318?v=4" width="100px;" alt="Foto do Gabriel"/><br>
+      <a href="https://github.com/DomynicBl" title="Domynic Barros Lima">
+        <img src="https://github.com/DomynicBl.png" width="100px;" alt="Foto do Domynic"/>
         <sub>
-          <img src="https://img.shields.io/badge/-Gabriel%20Henrique-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub Gabriel Henrique">
+          <img src="https://img.shields.io/badge/-Domynic%20Barros%20Lima-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub Domynic Barros Lima">
         </sub>
       </a>
     </td>
@@ -263,9 +286,27 @@ report/
         </sub>
       </a>
     </td>
+  </tr>
 </table>
 
 <table width="560">
+  <tr>
+    <td align="center" width="140">
+      <a href="https://github.com/GabrielDev0001" title="Gabriel Henrique">
+        <img src="https://avatars.githubusercontent.com/u/157509318?v=4" width="100px;" alt="Foto do Gabriel"/><br>
+        <sub>
+          <img src="https://img.shields.io/badge/-Gabriel%20Henrique-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub Gabriel Henrique">
+        </sub>
+      </a>
+    </td>
+    <td align="center" width="140">
+      <a href="https://github.com/MarcosVettel" title="Marcos Paulo">
+        <img src="https://avatars.githubusercontent.com/u/134240264?v=4" width="100px;" alt="Foto do Marcos"/><br>
+        <sub>
+          <img src="https://img.shields.io/badge/-Marcos%20Paulo-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub Marcos Paulo">
+        </sub>
+      </a>
+    </td>
     <td align="center" width="140">
       <a href="https://github.com/matheusmra" title="Matheus de Almeida">
         <img src="https://avatars.githubusercontent.com/u/69125506?v=4" width="100px;" alt="Foto do Matheus"/><br>
@@ -279,14 +320,6 @@ report/
         <img src="https://avatars.githubusercontent.com/u/161849185?v=4" width="100px;" alt="Foto do Matheus"/><br>
         <sub>
           <img src="https://img.shields.io/badge/-Matheus%20Felipe-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub Matheus Felipe">
-        </sub>
-      </a>
-    </td>
-    <td align="center" width="140">
-      <a href="https://github.com/MarcosVettel" title="Marcos Paulo">
-        <img src="https://avatars.githubusercontent.com/u/134240264?v=4" width="100px;" alt="Foto do Marcos"/><br>
-        <sub>
-          <img src="https://img.shields.io/badge/-Marcos%20Paulo-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub Marcos Paulo">
         </sub>
       </a>
     </td>
