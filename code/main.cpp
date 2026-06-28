@@ -9,6 +9,7 @@
 #include <iostream>
 #include <filesystem>
 #include <functional>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -20,11 +21,23 @@ void processSingleImage(std::string inputPath, std::string outputDir, const CLIO
     }
 
     std::string filename = fs::path(inputPath).stem().string();
-    fs::create_directories(outputDir);
+    if (outputDir != ".") {
+        fs::create_directories(outputDir);
+    }
+    
+    // Formata o prefixo do caminho de saída para manter organizado
+    std::string outPrefix = (outputDir == ".") ? filename : (outputDir + "/" + filename);
 
     Image procImage = options.useMedian ? orgImage.applyMedianFilter() : orgImage;
     if (options.gray) {
         procImage = procImage.toGrayscale();
+    }
+
+    // Tratamento direto para o método copy
+    if (options.method == "copy") {
+        procImage.save(outPrefix + "_copy.png");
+        std::cout << "Sucesso no processamento de (copy): " << filename << std::endl;
+        return;
     }
 
     Connectivity conn = (options.neighborhood == 8) ? Connectivity::EIGHT : Connectivity::FOUR;
@@ -48,38 +61,69 @@ void processSingleImage(std::string inputPath, std::string outputDir, const CLIO
     } 
     else if (options.method == "cousty") {
         MST mst = buildMST(graph);
-        labels = segmentCoustyByThreshold(mst, options.threshold);
+        
+        std::vector<int> thresholds = options.thresholds;
+        if (thresholds.empty()) thresholds.push_back(options.threshold);
+
+        for (int t : thresholds) {
+            labels = segmentCoustyByThreshold(mst, t);
+            
+            // Se tiver múltiplos thresholds, salva identificando-os
+            std::string t_suffix = (thresholds.size() > 1) ? ("_t" + std::to_string(t)) : "";
+            
+            Image randImg = Image::createColoredLabelImage(labels, procImage.width, procImage.height);
+            randImg.save(outPrefix + "_cousty" + t_suffix + "_random.png");
+
+            Image avgImg = Image::createAvgColorLabelImage(labels, orgImage);
+            avgImg.save(outPrefix + "_cousty" + t_suffix + "_avg.png");
+
+            Image boundImg = Image::createBoundaryLabelImage(labels, orgImage);
+            boundImg.save(outPrefix + "_cousty" + t_suffix + "_boundary.png");
+        }
+        
         Image saliency = createCoustySaliencyImage(mst);
-        saliency.save(outputDir + "/" + filename + "_cousty_saliency.png");
+        saliency.save(outPrefix + "_cousty_saliency.png");
+        std::cout << "Sucesso no processamento de: " << filename << std::endl;
+        return; // Retorna pois o Cousty já processou as múltiplas saídas no laço
     } 
     else if (options.method == "ift") {
-        bool ok = false;
+        bool ok = true;
         std::vector<Seed> seeds;
         if (!options.seedsPath.empty()) {
             seeds = loadSeedsFromFile(options.seedsPath, procImage.width, procImage.height, ok);
         } else if (options.autoSeeds) {
             seeds = generateAutomaticSeeds(procImage.width, procImage.height, options.autoSeedRows, options.autoSeedCols);
-        } else {
+        } else if (!options.manualSeeds.empty()){
             seeds = seedsFromCoordinateList(options.manualSeeds, procImage.width, procImage.height, ok);
+        } else {
+            ok = false;
+        }
+        
+        if (!ok || seeds.empty()) {
+            std::cerr << "Erro: Nenhuma semente valida fornecida para o metodo IFT em " << filename << std::endl;
+            return;
         }
         
         IFTResult iftRes = runIFT(graph, seeds);
         labels = iftRes.label;
         Image costImg = createIFTCostImage(iftRes, procImage.width, procImage.height);
-        costImg.save(outputDir + "/" + filename + "_ift_cost.png");
+        costImg.save(outPrefix + "_ift_cost.png");
+    } else {
+        std::cerr << "Erro: Metodo invalido '" << options.method << "'." << std::endl;
+        return;
     }
 
     if (!labels.empty()) {
         Image randImg = Image::createColoredLabelImage(labels, procImage.width, procImage.height);
-        randImg.save(outputDir + "/" + filename + "_" + options.method + "_random.png");
+        randImg.save(outPrefix + "_" + options.method + "_random.png");
 
         Image avgImg = Image::createAvgColorLabelImage(labels, orgImage);
-        avgImg.save(outputDir + "/" + filename + "_" + options.method + "_avg.png");
+        avgImg.save(outPrefix + "_" + options.method + "_avg.png");
 
         Image boundImg = Image::createBoundaryLabelImage(labels, orgImage);
-        boundImg.save(outputDir + "/" + filename + "_" + options.method + "_boundary.png");
+        boundImg.save(outPrefix + "_" + options.method + "_boundary.png");
         
-        std::cout << "Sucesso no processamento de: " << filename << " -> " << outputDir << std::endl;
+        std::cout << "Sucesso no processamento de: " << filename << std::endl;
     }
 }
 
@@ -107,7 +151,9 @@ int main(int argc, char* argv[]) {
             }
         }
     } else {
-        processSingleImage(options.inputPath, fs::path(options.outputPath).parent_path().string(), options);
+        fs::path outDir = fs::path(options.outputPath).parent_path();
+        std::string dirStr = outDir.empty() ? "." : outDir.string();
+        processSingleImage(options.inputPath, dirStr, options);
     }
 
     return 0;

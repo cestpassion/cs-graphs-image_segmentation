@@ -43,12 +43,42 @@ std::vector<int> parseThresholdList(const std::string& value, bool& valid, std::
 CLIOptions CLI::parse(int argc, char* argv[]) {
     CLIOptions options;
 
-    auto requireValue = [&](int& i, const std::string& argName) {
+    auto requireValue = [&](int& i, const std::string& argName) -> std::string {
         if (i + 1 >= argc) {
             options.valid = false;
             options.errorMessage = "Falta valor para o argumento " + argName;
-        } else {
-            i++;
+            return "";
+        }
+        return argv[++i];
+    };
+
+    auto requireInt = [&](int& i, const std::string& argName, bool& ok) -> int {
+        ok = false;
+        std::string val = requireValue(i, argName);
+        if (!options.valid) return 0;
+        try {
+            int parsed = std::stoi(val);
+            ok = true;
+            return parsed;
+        } catch (...) {
+            options.valid = false;
+            options.errorMessage = "O argumento " + argName + " deve ser um numero inteiro.";
+            return 0;
+        }
+    };
+
+    auto requireDouble = [&](int& i, const std::string& argName, bool& ok) -> double {
+        ok = false;
+        std::string val = requireValue(i, argName);
+        if (!options.valid) return 0.0;
+        try {
+            double parsed = std::stod(val);
+            ok = true;
+            return parsed;
+        } catch (...) {
+            options.valid = false;
+            options.errorMessage = "O argumento " + argName + " deve ser numerico.";
+            return 0.0;
         }
     };
 
@@ -56,46 +86,51 @@ CLIOptions CLI::parse(int argc, char* argv[]) {
         std::string arg = argv[i];
 
         if (arg == "--input" || arg == "-i") {
-            requireValue(i, arg);
-            if (options.valid) options.inputPath = argv[i];
+            options.inputPath = requireValue(i, arg);
         } else if (arg == "--output" || arg == "-o") {
-            requireValue(i, arg);
-            if (options.valid) options.outputPath = argv[i];
+            options.outputPath = requireValue(i, arg);
         } else if (arg == "--method" || arg == "-m") {
-            requireValue(i, arg);
-            if (options.valid) options.method = argv[i];
+            options.method = requireValue(i, arg);
         } else if (arg == "--color") {
             options.color = true;
         } else if (arg == "--gray") {
             options.gray = true;
+        } else if (arg == "--neighborhood") {
+            bool ok;
+            options.neighborhood = requireInt(i, arg, ok);
         } else if (arg == "--k") {
-            requireValue(i, arg);
-            if (options.valid) options.k = std::stod(argv[i]);
+            bool ok;
+            options.k = requireDouble(i, arg, ok);
         } else if (arg == "--min_size") {
-            requireValue(i, arg);
-            if (options.valid) options.minSize = std::stoi(argv[i]);
+            bool ok;
+            options.minSize = requireInt(i, arg, ok);
         } else if (arg == "--threshold") {
-            requireValue(i, arg);
-            if (options.valid) options.threshold = std::stoi(argv[i]);
+            bool ok;
+            options.threshold = requireInt(i, arg, ok);
         } else if (arg == "--thresholds") {
-            requireValue(i, arg);
-            if (options.valid) options.thresholds = parseThresholdList(argv[i], options.valid, options.errorMessage);
+            std::string val = requireValue(i, arg);
+            if (options.valid) options.thresholds = parseThresholdList(val, options.valid, options.errorMessage);
         } else if (arg == "--seeds") {
-            requireValue(i, arg);
-            if (options.valid) options.seedsPath = argv[i];
+            options.seedsPath = requireValue(i, arg);
         } else if (arg == "--seed") {
-            requireValue(i, arg);
-            if (options.valid) options.manualSeeds.push_back(std::stoi(argv[i]));
-            requireValue(i, arg);
-            if (options.valid) options.manualSeeds.push_back(std::stoi(argv[i]));
-            requireValue(i, arg);
-            if (options.valid) options.manualSeeds.push_back(std::stoi(argv[i]));
+            bool okX, okY, okL;
+            int x = requireInt(i, "--seed (x)", okX);
+            if (!options.valid) break;
+            int y = requireInt(i, "--seed (y)", okY);
+            if (!options.valid) break;
+            int label = requireInt(i, "--seed (label)", okL);
+            if (!options.valid) break;
+            if (okX && okY && okL) {
+                options.manualSeeds.push_back(x);
+                options.manualSeeds.push_back(y);
+                options.manualSeeds.push_back(label);
+            }
         } else if (arg == "--auto-seeds") {
             options.autoSeeds = true;
-            requireValue(i, arg);
-            if (options.valid) options.autoSeedRows = std::stoi(argv[i]);
-            requireValue(i, arg);
-            if (options.valid) options.autoSeedCols = std::stoi(argv[i]);
+            bool okR, okC;
+            options.autoSeedRows = requireInt(i, "--auto-seeds (rows)", okR);
+            if (!options.valid) break;
+            options.autoSeedCols = requireInt(i, "--auto-seeds (cols)", okC);
         } else if (arg == "--median") {
             options.useMedian = true;
         } else if (arg == "--batch") {
@@ -117,7 +152,15 @@ CLIOptions CLI::parse(int argc, char* argv[]) {
         }
         if (!options.batchMode && options.outputPath.empty()) {
             options.valid = false;
-            options.errorMessage = "O caminho de saida (--output) e obrigatorio.";
+            options.errorMessage = "O caminho de saida (--output) e obrigatorio no modo single-image.";
+        }
+        if (options.gray && options.color) {
+            options.valid = false;
+            options.errorMessage = "Use apenas --gray ou --color, nao ambos.";
+        }
+        if (options.neighborhood != 4 && options.neighborhood != 8) {
+            options.valid = false;
+            options.errorMessage = "O valor de --neighborhood deve ser 4 ou 8.";
         }
     }
 
@@ -131,7 +174,8 @@ void CLI::printHelp() {
     std::cout << "  --output <caminho>       Caminho da imagem de saida ou diretorio (batch)\n";
     std::cout << "  --method <metodo>        Metodo de segmentacao (copy, felzenszwalb, cousty, ift)\n";
     std::cout << "  --color                  Forca leitura em modo colorido (RGB)\n";
-    std::cout << "  --gray                   Forca leitura em tons de cinza\n\n";
+    std::cout << "  --gray                   Forca leitura em tons de cinza\n";
+    std::cout << "  --neighborhood <4|8>     Tipo de vizinhanca dos pixels\n\n";
 
     std::cout << "Novas Funcionalidades (Batch & Filtro):\n";
     std::cout << "  --median                 Aplica filtro de mediana 3x3 antes do processamento\n";

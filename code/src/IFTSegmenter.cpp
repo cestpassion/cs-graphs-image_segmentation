@@ -224,12 +224,13 @@ Image createIFTCostImage(const IFTResult& result, int width, int height) {
         }
     }
 
-    for (std::size_t i = 0; i < result.cost.size(); ++i) {
+    std::size_t n = std::min(result.cost.size(), costImg.pixels.size());
+    for (std::size_t i = 0; i < n; ++i) {
         if (result.cost[i] == std::numeric_limits<double>::infinity()) {
             costImg.pixels[i] = 255;
         } else {
             double norm = maxCost > 0.0 ? (result.cost[i] / maxCost) : 0.0;
-            costImg.pixels[i] = static_cast<unsigned char>(std::min(255.0, std::max(0.0, norm * 255.0)));
+            costImg.pixels[i] = static_cast<unsigned char>(std::clamp(norm * 255.0, 0.0, 255.0));
         }
     }
     return costImg;
