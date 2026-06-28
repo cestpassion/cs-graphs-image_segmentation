@@ -28,6 +28,9 @@ struct CLIOptions {
     int autoSeedRows = 0;
     int autoSeedCols = 0;
 
+    bool useMedian = false;
+    bool batchMode = false;
+
     bool help = false;
     bool valid = true;
     std::string errorMessage;

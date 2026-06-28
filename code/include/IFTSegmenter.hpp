@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "Graph.hpp"
+#include "Image.hpp"
 
 struct Seed {
     int x;
@@ -35,5 +36,8 @@ std::vector<Seed> generateAutomaticSeeds(int width, int height, int rows,
 
 std::vector<Seed> seedsFromCoordinateList(const std::vector<int>& values,
                                           int width, int height, bool& ok);
+                                          
+// Exporta a matriz de custos como imagem
+Image createIFTCostImage(const IFTResult& result, int width, int height);
 
-#endif  
+#endif

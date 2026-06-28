@@ -29,6 +29,15 @@ public:
         int height
     );
 
+    //Aplica o filtro de mediana 3x3 para redução de ruído local
+    Image applyMedianFilter() const;
+
+    //Gera imagem com a média de cores real de cada segmento
+    static Image createAvgColorLabelImage(const std::vector<int>& labels, const Image& original);
+
+    //Desenha as bordas dos segmentos (em vermelho) sobreposta à imagem original
+    static Image createBoundaryLabelImage(const std::vector<int>& labels, const Image& original);
+
 private:
     int getIndex(int x, int y, int c) const;
 };
