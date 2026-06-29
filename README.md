@@ -1,4 +1,6 @@
 # Trabalho de Teoria de Grafos e Computabilidade - *Segmentação de Imagem*
+![C++](https://img.shields.io/badge/C++-17-blue.svg)
+![LaTeX](https://img.shields.io/badge/LaTeX-JBCS_Template-green.svg)
 
 Projeto desenvolvido para a disciplina de **Teoria de Grafos e Computabilidade**, com o objetivo de estudar e implementar métodos de **segmentação de imagens baseada em grafos**.
 
@@ -33,35 +35,101 @@ Método baseado em caminho mínimo. A segmentação ocorre a partir de sementes,
 ```txt
 .
 ├── code/
+│   ├── data/
+│   │   └── input/
+│   │       ├── alien.png
+│   │       ├── cenario.jpg
+│   │       ├── dados.png
+│   │       ├── flor.jpg
+│   │       ├── seeds.txt
+│   │       └── shrek.png
 │   ├── external/
+│   │   ├── README.md
 │   │   ├── stb_image.h
 │   │   └── stb_image_write.h
 │   ├── include/
 │   │   ├── CLI.hpp
-│   │   └── Image.hpp
+│   │   ├── CoustySegmenter.hpp
+│   │   ├── Edge.hpp
+│   │   ├── FelzenszwalbSegmenter.hpp
+│   │   ├── Graph.hpp
+│   │   ├── IFTSegmenter.hpp
+│   │   ├── Image.hpp
+│   │   ├── MST.hpp
+│   │   ├── PriorityQueue.hpp
+│   │   └── UnionFind.hpp
 │   ├── src/
 │   │   ├── CLI.cpp
-│   │   └── Image.cpp
+│   │   ├── CoustySegmenter.cpp
+│   │   ├── FelzenszwalbSegmenter.cpp
+│   │   ├── Graph.cpp
+│   │   ├── IFTSegmenter.cpp
+│   │   ├── Image.cpp
+│   │   ├── MST.cpp
+│   │   ├── PriorityQueue.cpp
+│   │   └── UnionFind.cpp
 │   ├── tests/
-│   ├── data/
-│   │   ├── input/
-│   │   └── output/
-│   ├── main.cpp
-│   └── Makefile
-│
+│   │   ├── .gitkeep
+│   │   ├── test_cousty.cpp
+│   │   ├── test_felzenszwalb.cpp
+│   │   ├── test_graph.cpp
+│   │   └── test_ift.cpp
+│   ├── Makefile
+│   └── main.cpp
 ├── docs/
 │   └── 2026-1-assignment-1-statement.pdf
-│
 ├── refs/
 │   ├── Efficient_Graph-Based_Image_Segmentation.pdf
-│   ├── Hierarchical_Segmentations_with_Graphs.pdf
-│   └── The_Image_Foresting_Transform.pdf
-│
+│   ├── Hierarchical_Segmentations_with_Graphs_Quasi-flat_.pdf
+│   └── The_Image_Foresting_Transform_Theory_Algorithms_an.pdf
 ├── report/
-│
-├── README.md
+│   ├── figs/
+│   │   ├── alien_cousty_t20_boundary.png
+│   │   ├── alien_cousty_t80_boundary.png
+│   │   ├── alien_felzenszwalb_boundary.png
+│   │   ├── cenario_cousty_t40_boundary.png
+│   │   ├── cenario_cousty_t80_avg.png
+│   │   ├── cenario_felzenszwalb_boundary.png
+│   │   ├── dados_cousty_saliency.png
+│   │   ├── flor_cousty_t80_avg.png
+│   │   ├── flor_ift_boundary.png
+│   │   ├── shrek_cousty_t20_boundary.png
+│   │   ├── shrek_felzenszwalb_boundary.png
+│   │   └── shrek_ift_boundary.png
+│   ├── aas_macros.sty
+│   ├── academicons.sty
+│   ├── academicons.ttf
+│   ├── apalike-sol.bst
+│   ├── main.tex
+│   ├── refs.bib
+│   ├── sbc2023.cls
+│   ├── sectsty.sty
+│   ├── tuacademicons.fd
+│   └── Relatório do Projeto.pdf
+├── results/
+│   ├── alien/
+│   │   ├── alien_cousty_saliency.png
+│       ...
+│   │   └── alien_ift_random.png
+│   ├── cenario/
+│   │   ├── cenario_cousty_saliency.png
+│       ...
+│   │   └── cenario_ift_random.png
+│   ├── dados/
+│   │   ├── dados_cousty_saliency.png
+│       ...
+│   │   └── dados_ift_random.png
+│   ├── flor/
+│   │   ├── flor_cousty_saliency.png
+│       ...
+│   │   └── flor_ift_random.png
+│   └── shrek/
+│       ├── shrek_cousty_saliency.png
+│       ...
+│       └── shrek_ift_random.png
+├── .gitignore
 ├── LICENSE
-└── .gitignore
+└── README.md
 ````
 
 ## Pastas principais
@@ -160,6 +228,10 @@ Esse comando remove o executável gerado.
 ```bash
 ./segmentador --input data/input/exemplo.jpg --output data/output/cinza.png --method copy --gray
 ```
+
+## Resultados Experimentais
+
+O diretório `results/` contém o conjunto completo de segmentações geradas pelos três métodos (Felzenszwalb, Cousty, IFT) para todas as imagens de teste. Foram geradas visualizações de borda (`_boundary`), médias (`_avg`), segmentação aleatória (`_random`) e mapas auxiliares (saliência e custo), totalizando 85 arquivos de análise qualitativa organizados por imagem de entrada.
 
 ## Parâmetros aceitos
 
@@ -304,14 +376,6 @@ report/
         <img src="https://avatars.githubusercontent.com/u/134240264?v=4" width="100px;" alt="Foto do Marcos"/><br>
         <sub>
           <img src="https://img.shields.io/badge/-Marcos%20Paulo-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub Marcos Paulo">
-        </sub>
-      </a>
-    </td>
-    <td align="center" width="140">
-      <a href="https://github.com/matheusmra" title="Matheus de Almeida">
-        <img src="https://avatars.githubusercontent.com/u/69125506?v=4" width="100px;" alt="Foto do Matheus"/><br>
-        <sub>
-          <img src="https://img.shields.io/badge/-Matheus%20de%20Almeida-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub Matheus de Almeida">
         </sub>
       </a>
     </td>

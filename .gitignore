@@ -8,6 +8,12 @@ segmentador.exe
 *.o
 *.obj
 *.out
+*.aux
+*.log
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
 
 # Build folders
 build/
@@ -21,8 +27,10 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Saidas geradas
+# Saidas geradas - Regra Geral
 data/output/*
 code/data/output/*
+
+# Exceção: Manter o .gitkeep para garantir que as pastas existam
 !data/output/.gitkeep
 !code/data/output/.gitkeep
